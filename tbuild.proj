@@ -1,0 +1,23 @@
+tm "cflib" {
+	version 1.2
+
+	summary "Miscellaneous collection of commonly used base classes and procs"
+
+	description {
+		Kitchen sink collection of nearly universally used baseclasses and
+		utility functions, covering logging, configuration management,
+		class property handling, reference counting, etc
+	}
+
+	init {
+		namespace eval cflib {}
+	}
+
+	files {
+		scripts/*.tcl
+	}
+
+	platform tcl
+}
+
+# vim: ft=tcl
