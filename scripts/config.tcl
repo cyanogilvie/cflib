@@ -29,6 +29,10 @@ oo::class create cflib::config {
 		set mode	"key"
 		set rest	{}
 		foreach arg $argv {
+			if {$arg eq "--"} {
+				set mode	"forced_rest"
+				continue
+			}
 			switch -- $mode {
 				key {
 					if {[string index $arg 0] eq "-"} {
@@ -46,6 +50,10 @@ oo::class create cflib::config {
 				val {
 					dict set cfg $key $arg
 					set mode	"key"
+				}
+
+				forced_rest {
+					lappend rest	$arg
 				}
 			}
 		}

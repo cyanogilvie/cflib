@@ -10,10 +10,9 @@ proc cflib::in_tmp_dir {script} { #<<<
 	try {
 		uplevel $script
 	} on error {errmsg options} {
+		puts [dict get $options -errorinfo]
 		dict incr options -level
 		return -options $options $errmsg
-	} on ok {res} {
-		return $res
 	} finally {
 		cd $oldpwd
 		if {[info exists tmpdir] && [file exists $tmpdir]} {

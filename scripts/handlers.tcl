@@ -43,9 +43,12 @@ oo::class create cflib::handlers {
 	#>>>
 	method deregister_handler {type handler} { #<<<
 		if {![dict exists $handlers $type]} return
-		set idx	[lsearch [dict get $handlers $type] $handler]
+		set new	{}
+		foreach rhandler [dict get $handlers $type] {
+			if {$rhandler eq $handler} continue
+		}
 		#my log trivia "[self] Deregistering handler ($type) ($handler)"
-		dict set handlers $type	[lreplace [dict get $handlers $type] $idx $idx]
+		dict set handlers $type	$new
 	}
 
 	#>>>
@@ -95,7 +98,8 @@ oo::class create cflib::handlers {
 				set last_handler	$handler
 				dict set afterids invoke_handler_$handler)	$pending_afterid
 				my _handlers_debug debug "Invoking callback for ($type): ($handler)"
-				lappend results	[uplevel #0 $handler $args]
+				#lappend results	[uplevel #0 $handler $args]
+				lappend results	[coroutine coro_handler_[incr ::coro_seq] {*}$handler {*}$args]
 				after cancel $pending_afterid
 				dict unset afterids	invoke_handler_$handler
 			}
