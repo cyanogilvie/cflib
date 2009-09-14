@@ -7,7 +7,7 @@ oo::class create cflib::config {
 		rest
 	}
 
-	constructor {argv config} { #<<<
+	constructor {argv config {configfile ""}} { #<<<
 		package require dsl
 		set cfg	[dict create]
 
@@ -24,6 +24,10 @@ oo::class create cflib::config {
 			if {[interp exists $slave]} {
 				interp delete $slave
 			}
+		}
+
+		if {$configfile ne "" && [file readable $configfile]} {
+			set cfg	[dict merge $cfg [cflib::readfile $configfile]]
 		}
 
 		set mode	"key"
