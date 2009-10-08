@@ -1,19 +1,16 @@
-VER=1.0
+TBUILD=`which tbuild`
 
-TM_FILES=\
-		 init.tcl \
-		 scripts/pclass.tcl \
-		 scripts/baselog.tcl \
-		 scripts/refcounted.tcl
-
-all: tm
-
-tm: init.tcl scripts/*.tcl
-	install -d tm
-	cat $(TM_FILES) > tm/cflib-$(VER).tm
-
-install: tm
-	rsync -avP tm/* ../tm
+all:
+	$(TBUILD) build all
 
 clean:
-	-rm -rf tm
+	$(TBUILD) clean
+
+install:
+	$(TBUILD) install
+
+test: all
+	$(TBUILD) run -- tests/all.tcl $(TESTFLAGS)
+
+remove:
+	$(TBUILD) remove

@@ -206,6 +206,9 @@ cflib::pclass create cflib::pclassbase {
 		if {[llength $args] > 1} {
 			error "Too many arguments, expecting name ?default_value?"
 		}
+		if {[string index $name 0] eq "-"} {
+			set name	[string range $name 1 end]
+		}
 		my variable _props
 		if {[dict exists $_props $name] && [dict get $_props $name protection] eq "public"} {
 			my variable $name

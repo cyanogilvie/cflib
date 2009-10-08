@@ -1,0 +1,180 @@
+# vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
+
+if {"::tcltest" ni [namespace children]} {
+	package require tcltest 2.2.5
+	namespace import ::tcltest::*
+}
+
+tcl::tm::path add [file join [pwd] tm tcl]
+
+try {
+	package require cflib
+	package require datasource
+} on error {errmsg options} {
+	puts stderr [dict get $options -errorinfo]
+	exit 2
+}
+
+test scheduler-1.1 {Construct cflib::scheduler} -setup { #<<<
+	set events_ds	[ds::dslist new -headers {id script} -list {}]
+} -body {
+	set obj	[cflib::scheduler new -events_ds $events_ds]
+	info object isa object $obj
+} -result {1} -cleanup {
+	if {[info exists obj]} {
+		if {[info object isa object $obj]} {
+			$obj destroy
+		}
+		unset obj
+	}
+	if {[info exists events_ds] && [info object isa object $events_ds]} {
+		$events_ds destroy
+		unset events_ds
+	}
+}
+#>>>
+test scheduler-1.2 {Catch missing -events_ds} -body { #<<<
+	cflib::scheduler create scheduler
+} -returnCodes {
+	error
+} -cleanup {
+	if {[info object isa object scheduler]} {
+		scheduler destroy
+	}
+} -result {Must set -events_ds}
+#>>>
+test scheduler-1.3 {Test event scheduling} -setup { #<<<
+	set events_ds	[ds::dslist new -headers {id script} -list {
+		{1	{
+			proc get_events {start_s end_s} {
+				set events	{}
+
+				set s	[expr {(($start_s / 3600) * 3600) + 3600}]
+				while {$s <= $end_s} {
+					lappend events	[list $s [list hourly_event $s]]
+					incr s 3600
+				}
+				return $events
+			}
+		}}
+		{2	{
+			proc get_events {start_s end_s} {
+				set events	{}
+
+				set s	[expr {(($start_s / 86400) * 86400) + 86400}]
+				while {$s <= $end_s} {
+					lappend events	[list $s [list daily_event $s]]
+					incr s 86400
+				}
+				return $events
+			}
+		}}
+	}]
+} -body {
+	# Ensure we aren't on the cusp of a point that could break the prediction
+	if {3600 - ([clock seconds] % 3600) < 3} {
+		after 4000
+	}
+
+	# Predict events that will be posted <<<
+	set start_s		[clock seconds]
+	set end_s		[expr {$start_s + 7 * 86400}]
+	set s	[expr {(([clock seconds] / 3600) * 3600) + 3600}]
+	set predicted	{}
+	while {$s < $end_s} {
+		set thisevent	{}
+		if {$s % 3600 == 0} {
+			lappend thisevent [list 1 [list hourly_event $s]]
+		}
+		if {$s % 86400 == 0} {
+			lappend thisevent [list 2 [list daily_event $s]]
+		}
+		if {[llength $thisevent] > 0} {
+			lappend predicted	$s $thisevent
+		}
+		incr s 3600
+	}
+	# Predict events that will be posted >>>
+	
+	cflib::scheduler create scheduler -events_ds $events_ds -window_days 7.0
+	set events	[scheduler _test_pending_events]
+	expr {$events eq $predicted && [llength $events] > 0}
+} -result {1} -cleanup {
+	if {[info object isa object scheduler]} {
+		scheduler destroy
+	}
+	if {[info exists events_ds] && [info object isa object $events_ds]} {
+		$events_ds destroy
+		unset events_ds
+	}
+}
+#>>>
+test scheduler-1.4 {Catch error with event source script} -setup { #<<<
+	set events_ds	[ds::dslist new -headers {id script} -list {
+		{1	{
+			# Doesn't define get_events
+		}}
+	}]
+} -body {
+	set obj	[cflib::scheduler new -events_ds $events_ds]
+	info object isa object $obj
+} -result {1} -cleanup {
+	if {[info exists obj]} {
+		if {[info object isa object $obj]} {
+			$obj destroy
+		}
+		unset obj
+	}
+	if {[info exists events_ds] && [info object isa object $events_ds]} {
+		$events_ds destroy
+		unset events_ds
+	}
+} -match glob -output {*Event source 1 does not define get_events proc*}
+#>>>
+test scheduler-1.5 {Test simple event dispatch} -setup { #<<<
+	set ::sum	0
+	proc receive_event {script_id event_data} {
+		lassign $event_data name num
+		incr ::sum	$num
+	}
+
+	set events_ds	[ds::dslist new -headers {id script} -list {
+		{1	{
+			proc get_events {start_s end_s} {
+				set events	{}
+
+				for {set s 1} {$s <= 3} {incr s} {
+					lappend events	[list [expr {$start_s + $s}] [list test $s]]
+				}
+				lappend events	[list [expr {$start_s + 20}] [list test 20]]
+				return $events
+			}
+		}}
+	}]
+} -body {
+	# Ensure we aren't on the cusp of a point that could break the prediction
+	set delta	[expr {1000 - ([clock milliseconds] % 1000)}]
+	after [expr {$delta + 100}]
+	# We should be around 102ms into this second window
+
+	cflib::scheduler create scheduler -events_ds $events_ds
+	scheduler register_handler event_fired receive_event
+	after 5000 {set ::flag 1}
+	vwait ::flag
+	set ::sum
+} -cleanup {
+	if {[info object isa object scheduler]} {
+		scheduler destroy
+	}
+	if {[info exists events_ds] && [info object isa object $events_ds]} {
+		$events_ds destroy
+		unset events_ds
+	}
+	rename receive_event {}
+	unset ::sum
+} -result {6}
+#>>>
+
+::tcltest::cleanupTests
+return
+
