@@ -1,20 +1,16 @@
 # vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
 
 proc cflib::readfile {fn {mode text}} {
+	set handle	[open $fn r]
 	try {
-		set fp	[open $fn r]
 		if {$mode eq "binary"} {
-			chan configure $fp \
+			chan configure $handle \
 					-translation binary \
 					-encoding binary
 		}
-		set dat	[read $fp]
-
-		return $dat
+		chan read $handle
 	} finally {
-		if {[info exists fp] && $fp in [chan names]} {
-			close $fp
-		}
+		chan close $handle
 	}
 }
 

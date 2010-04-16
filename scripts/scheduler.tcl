@@ -67,6 +67,7 @@ cflib::pclass create cflib::scheduler {
 			$events_ds register_handler remove_item	[my code _remove_item]
 			my _setup_events
 		} else {
+			$events_ds register_handler onchange	[my code _refresh]
 			my _setup_events
 		}
 	}
