@@ -111,11 +111,6 @@ cflib::pclass create cflib::scheduler {
 	#>>>
 
 	method _fire {s} { #<<<
-		set afterinfo	{}
-		foreach id [after info] {
-			lappend afterinfo	[list $id [after info $id]]
-		}
-		#my log debug "\nposted for this slot: [llength [dict get $posted $s]] items: ([join [dict get $posted $s] |])\npending afters:\n\t[join $afterinfo \n\t]"
 		if {[dict exists $afterids $s]} {
 			after cancel [dict get $afterids $s]
 			dict unset afterids $s

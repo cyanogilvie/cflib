@@ -9,12 +9,17 @@ oo::class create cflib::handlers {
 		processing_stack
 	}
 
-	constructor {} { #<<<
+	constructor {args} { #<<<
 		set allow_unregistered	1
 		set handlers			[dict create]
 		set afterids			[dict create]
 		set processing_handlers	0
 		set processing_stack	{}
+
+		if {[self next] ne ""} {
+			puts "cflib::handlers for [self], next is: ([self next])"
+			next {*}$args
+		}
 	}
 
 	#>>>
