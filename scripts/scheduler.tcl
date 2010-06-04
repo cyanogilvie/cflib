@@ -78,8 +78,8 @@ cflib::pclass create cflib::scheduler {
 
 		dict for {s afterid} $afterids {
 			after cancel $afterid
-			dict unset afterids $s
 		}
+		set afterids	{}
 
 		if {
 			[info exists events_ds] &&

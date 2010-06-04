@@ -14,6 +14,9 @@ if {[lsearch [namespace children] ::tcltest] == -1} {
     namespace import ::tcltest::*
 }
 
+set here	[file dirname [file normalize [info script]]]
+tcl::tm::path add [file join [file dirname $here] tm tcl]
+
 set ::tcltest::testSingleFile false
 set ::tcltest::testsDirectory [file dir [info script]]
 
@@ -29,6 +32,15 @@ if {[catch {::tcltest::normalizePath ::tcltest::testsDirectory}]} {
 }
 
 set chan $::tcltest::outputChannel
+
+#rename puts _puts
+#proc puts {args} {
+#	if {[string trim [lindex $args end]] eq ""} {
+#		error "Bang"
+#	} else {
+#		uplevel 1 [list _puts {*}$args]
+#	}
+#}
 
 puts $chan "Tests running in interp:       [info nameofexecutable]"
 puts $chan "Tests running with pwd:        [pwd]"

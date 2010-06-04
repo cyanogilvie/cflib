@@ -20,8 +20,7 @@ proc cflib::intersect3 {list1 list2} {
 		}
 	}
 
-
-	return [list $firstonly $intersection $secondonly]
+	list $firstonly $intersection $secondonly
 }
 
 

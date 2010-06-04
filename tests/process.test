@@ -1,0 +1,160 @@
+# vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
+
+if {"::tcltest" ni [namespace children]} {
+	package require tcltest 2.2.5
+	namespace import ::tcltest::*
+}
+
+package require cflib 1.8.0
+
+coroutine coro_[incr ::coro_seq] apply {
+	{} {
+		test process-1.1 {Simple echo test} -constraints {unix} -body { #<<<
+			cflib::process create p echo "hello, world"
+			p waitfor finished
+			p output
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+		} -result "hello, world\n"
+		#>>>
+		test process-1.2 {Catch early result call} -constraints {unix} -body { #<<<
+			cflib::process create p echo "hello, world"
+			p result
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+		} -returnCodes {
+			error
+		} -result {Child yet lives}
+		#>>>
+		test process-1.3 {Successful result} -constraints {unix} -body { #<<<
+			cflib::process create p echo "hello, world"
+			p waitfor finished
+			p result
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+		} -result {0}
+		#>>>
+		test process-1.4 {Exceptional result} -constraints {unix} -body { #<<<
+			cflib::process create p echo "hello, world" | grep "foo"
+			p waitfor finished
+			p result
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+		} -result {1}
+		#>>>
+		test process-1.5 {Output gathering} -constraints {unix} -body { #<<<
+			cflib::process create p echo -e "hello, world\nfoobar\nbaz" | grep "foo"
+			p waitfor finished
+			p output
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+		} -result "foobar\n"
+		#>>>
+		test process-1.6 {Output gathering event} -constraints {unix} -setup { #<<<
+			set ::output	""
+			proc receive_output {channel data} {
+				append ::output	$data
+			}
+		} -body {
+			cflib::process create p echo -e "hello, world\nfoobar\nbaz"
+			p register_handler output receive_output
+			p waitfor finished
+			set ::output
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+			rename receive_output {}
+			unset ::output
+		} -result "hello, world\nfoobar\nbaz\n"
+		#>>>
+		test process-1.7 {Reap gathering event} -constraints {unix} -setup { #<<<
+			set ::reaped	""
+			proc receive_output {result} {
+				set ::reaped	$result
+			}
+		} -body {
+			cflib::process create p echo -e "hello, world\nfoobar\nbaz" | grep quux
+			p register_handler reaped receive_output
+			vwait ::reaped
+			set ::reaped
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+			rename receive_output {}
+			unset ::reaped
+		} -result {1}
+		#>>>
+		test process-1.8 {stdout-only output gathering} -constraints {unix} -body { #<<<
+			cflib::process create p echo -e "hello, world\nfoobar\nbaz" | grep "foo"
+			p waitfor finished
+			p stdout
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+		} -result "foobar\n"
+		#>>>
+		test process-1.9 {Waiting on an output string} -constraints {unix} -body { #<<<
+			cflib::process create p echo "hello, world\nsome token (hello)\nfoobar"
+			set before	[string match "*me token (hello)*" [p output]]
+			p waitfor_output "me token (hello)"
+			set after	[string match "*me token (hello)*" [p output]]
+			list $before $after
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+		} -result {0 1}
+		#>>>
+		test process-1.10 {Abort output wait when child dies} -constraints {unix} -body { #<<<
+			cflib::process create p echo "hello, world\nfoobar"
+			set before	[string match "*me token (hello)*" [p output]]
+			set ecode	[catch {p waitfor_output "me token (hello)"} msg]
+			set after	[string match "*me token (hello)*" [p output]]
+			list $before $after $ecode $msg $::errorCode
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+		} -result {0 0 1 {child died while waiting for "me token (hello)"} {child_died {me token (hello)}}}
+		#>>>
+		test process-1.11 {Sending kills to orphans} -constraints {unix} -body { #<<<
+			cflib::process create p netcat -l -p 1234
+			set pids	[p pids]
+			p destroy
+			after 500		;# Give the netcat some time to die
+			cflib::process create ps ps fup $pids
+			ps waitfor finished
+			ps result
+		} -cleanup {
+			if {[info object isa object p]} {
+				p destroy
+			}
+			if {[info object isa object ps]} {
+				ps destroy
+			}
+			if {[info exists pids]} {
+				unset pids
+			}
+		} -result {1}
+		#>>>
+
+		set ::done 1
+	}
+}
+
+vwait ::done
+::tcltest::cleanupTests
+return
