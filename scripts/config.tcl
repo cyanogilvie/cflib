@@ -19,6 +19,27 @@ oo::class create cflib::config {
 				}
 
 				#>>>
+				file {definitionsvar op args} { #<<<
+					switch -- $op {
+						normalize -
+						exists -
+						readable -
+						type -
+						dirname -
+						rootname -
+						extension -
+						tail -
+						join {
+							tailcall file $op {*}$args
+						}
+
+						default {
+							error "Method \"$op\" of file is not allowed"
+						}
+					}
+				}
+
+				#>>>
 			} $config [namespace which -variable definitions]
 		} finally {
 			if {[interp exists $slave]} {
