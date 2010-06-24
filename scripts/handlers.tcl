@@ -101,10 +101,10 @@ oo::class create cflib::handlers {
 				set pending_afterid	\
 						[after 3000 [namespace code [list my _throw_hissy_handler $handler $args]]]
 				set last_handler	$handler
-				dict set afterids invoke_handler_$handler)	$pending_afterid
+				dict set afterids invoke_handler_$handler	$pending_afterid
 				my _handlers_debug debug "Invoking callback for ($type): ($handler)"
 				#lappend results	[uplevel #0 $handler $args]
-				lappend results	[coroutine coro_handler_[incr ::coro_seq] {*}$handler {*}$args]
+				lappend results	[coroutine coro_handler_$handler_[incr ::coro_seq] {*}$handler {*}$args]
 				after cancel $pending_afterid
 				dict unset afterids	invoke_handler_$handler
 			}
