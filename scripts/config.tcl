@@ -48,7 +48,7 @@ oo::class create cflib::config {
 		}
 
 		if {$configfile ne "" && [file readable $configfile]} {
-			set cfg	[dict merge $cfg [cflib::readfile $configfile]]
+			set cfg	[dict merge $cfg [dsl::decomment [cflib::readfile $configfile]]]
 		}
 
 		set mode	"key"
