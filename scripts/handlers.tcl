@@ -51,6 +51,7 @@ oo::class create cflib::handlers {
 		set new	{}
 		foreach rhandler [dict get $handlers $type] {
 			if {$rhandler eq $handler} continue
+			lappend new $rhandler
 		}
 		#my log trivia "[self] Deregistering handler ($type) ($handler)"
 		dict set handlers $type	$new
