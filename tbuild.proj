@@ -1,5 +1,5 @@
 tm "cflib" {
-	version 1.8.2
+	version 1.9.0
 
 	summary "Miscellaneous collection of commonly used base classes and procs"
 

@@ -59,7 +59,7 @@ namespace eval ::oo::define::cflib {
 					}
 				}
 				return -options $options $errmsg
-				return [namespace eval %s [list %s {*}$args]]
+				#return [namespace eval %s [list %s {*}$args]]
 			}
 		} $class $entry]
 	}

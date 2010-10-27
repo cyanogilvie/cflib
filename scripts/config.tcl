@@ -116,6 +116,11 @@ oo::class create cflib::config {
 	}
 
 	#>>>
+	method set {key newval} { #<<<
+		dict set cfg $key $newval
+	}
+
+	#>>>
 	method rest {} { #<<<
 		return $rest
 	}
