@@ -34,18 +34,18 @@ oo::class create cflib::refcounted {
 
 	#>>>
 	method incref {args} { #<<<
-		#set old		$refcount
+		?? {set old		$refcount}
 		incr refcount
-		#my log_cmd debug "[self]: refcount $old -> $refcount ($args)"
+		?? {log debug "[self]: refcount $old -> $refcount ($args)"}
 	}
 
 	#>>>
 	method decref {args} { #<<<
-		#set old		$refcount
+		?? {set old		$refcount}
 		incr refcount -1
-		#my log_cmd debug "[self]: refcount $old -> $refcount ($args)"
+		?? {log debug "[self]: refcount $old -> $refcount ($args)"}
 		if {$refcount <= 0} {
-			#my log_cmd debug "[self]: our time has come"
+			?? {log debug "[self]: our time has come"}
 			my destroy
 			return
 		}

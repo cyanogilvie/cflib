@@ -84,7 +84,7 @@ oo::class create cflib::businesstime {
 	}
 
 	#>>>
-	forward cget		cfg cget
+	forward cget cfg cget
 
 	method _compile_times {daystart times} { #<<<
 		if {[llength $times] % 2 != 0} {
@@ -187,7 +187,7 @@ oo::class create cflib::businesstime {
 				set from	[clock scan $from]
 			}
 		}
-		?? {puts "Calculating ($interval) offset from \"[clock format $from]\""}
+		?? {log debug "Calculating ($interval) offset from \"[clock format $from]\""}
 
 		# Compute the interval manually rather than using clock add to avoid
 		# things like DST adjustments messing with the absolute interval value
@@ -231,19 +231,14 @@ oo::class create cflib::businesstime {
 		set pointer	$from
 
 		?? {
-			puts "units: $units"
-			puts "remaining: $remaining $step_mode"
-			puts "pointer: \"[clock format $pointer]\""
+			log debug "units: $units\nremaining: $remaining $step_mode\npointer: \"[clock format $pointer]\""
 		}
 
 		while {1} {
 			set daystart	[clock scan 00:00:00 -base $pointer]
 			set gaps		[my _gaps $daystart]
 			?? {
-				puts "-------------------------------------------------"
-				puts "While loop iteration [incr _iter], pointer: \"[clock format $pointer]\""
-				puts "\tdaystart: \"[clock format $daystart]\""
-				puts "\tremaining: $remaining"
+				log debug "-------------------------------------------------\nWhile loop iteration [incr _iter], pointer: \"[clock format $pointer]\"\n\tdaystart: \"[clock format $daystart]\"\n\tremaining: $remaining"
 				#foreach {a b} $gaps {
 				#	puts "\tgap \"[clock format $a]]\" - \"[clock format $b]\""
 				#}
@@ -266,32 +261,32 @@ oo::class create cflib::businesstime {
 
 			foreach {gap_start gap_end} $gaps {
 				?? {
-					puts "\t=== Processing gap \"[clock format $gap_start]\" - \"[clock format $gap_end]\""
+					log debug "\t=== Processing gap \"[clock format $gap_start]\" - \"[clock format $gap_end]\""
 				}
 				if {$pointer + $remaining < $gap_start} {
 					?? {
-						puts "\t\t-> Enough time remains before the start of the gap, advancing pointer \"[clock format $pointer]\" by $remaining seconds to \"[clock format [+ $pointer $remaining]]\" and calling it a day"
+						log debug "\t\t-> Enough time remains before the start of the gap, advancing pointer \"[clock format $pointer]\" by $remaining seconds to \"[clock format [+ $pointer $remaining]]\" and calling it a day"
 					}
 					incr pointer	$remaining
 					set remaining	0
 					return $pointer
 				} elseif {$pointer < $gap_start} {
 					?? {
-						puts "\t\t-> Pointer is before the next gap, advancing to gap_end+1: \"[clock format [+ $gap_end 1]]\", and reducing remaining by [- $gap_start $pointer] seconds to [- $remaining [- $gap_start $pointer]]"
+						log debug "\t\t-> Pointer is before the next gap, advancing to gap_end+1: \"[clock format [+ $gap_end 1]]\", and reducing remaining by [- $gap_start $pointer] seconds to [- $remaining [- $gap_start $pointer]]"
 					}
 					incr remaining	-[- $gap_start $pointer]
 					set pointer		[+ $gap_end 1]
 				} elseif {$pointer <= $gap_end} {
 					?? {
-						puts "\t\t-> Pointer is in the gap, advancing to gap_end+1"
+						log debug "\t\t-> Pointer is in the gap, advancing to gap_end+1"
 					}
 					set pointer		[+ $gap_end 1]
 				} else {
 					?? {
-						puts "\t\t-> Pointer is beyond the gap_end, doing nothing"
+						log debug "\t\t-> Pointer is beyond the gap_end, doing nothing"
 					}
 				}
-				?? {puts "\t    <- Pointer \"[clock format $pointer]\""}
+				?? {log debug "\t    <- Pointer \"[clock format $pointer]\""}
 			}
 		}
 	}
