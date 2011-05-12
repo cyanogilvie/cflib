@@ -10,7 +10,8 @@ install:
 	$(TBUILD) install
 
 test: all
-	$(TBUILD) run -- tests/all.tcl $(TESTFLAGS)
+	#$(TBUILD) run -- tests/all.tcl $(TESTFLAGS)
+	`which cfkit8.6` tests/all.tcl $(TESTFLAGS)
 
 remove:
 	$(TBUILD) remove

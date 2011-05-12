@@ -1,0 +1,61 @@
+# vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
+
+if {"::tcltest" ni [namespace children]} {
+	package require tcltest 2.3.3
+	namespace import ::tcltest::*
+}
+
+package require cflib
+
+test config-1.1 {Instantiate a normal config object} -body { #<<<
+	cflib::config create cfg {-foo foo -bar bar} {
+		variable foo	"orig.foo"
+		variable bar	"orig.bar"
+		variable baz	"orig.baz"
+	}
+	list [cfg get foo] [cfg get bar] [cfg get baz]
+} -cleanup {
+	if {[info object isa object cfg]} {
+		cfg destroy
+	}
+} -result {foo bar orig.baz}
+#>>>
+test config-2.1 {Instantiate a config_lite object} -body { #<<<
+	cflib::config_lite create cfg {-foo foo -bar bar} {
+		variable foo	"orig.foo"
+		variable bar	"orig.bar"
+		variable baz	"orig.baz"
+	}
+	list [cfg get foo] [cfg get bar] [cfg get baz]
+} -cleanup {
+	if {[info object isa object cfg]} {
+		cfg destroy
+	}
+} -result {foo bar orig.baz}
+#>>>
+test config-2.2 {Confirm current interp variable command is restored} -body { #<<<
+	cflib::config_lite create cfg {-foo foo -bar bar} {
+		variable foo	"orig.foo"
+		variable bar	"orig.bar"
+		variable baz	"orig.baz"
+	}
+	namespace eval ::test_config-2.2 {
+		set v	1234
+		proc t {} {
+			variable v
+			set v
+		}
+	}
+	list [cfg get foo] [cfg get bar] [cfg get baz] [::test_config-2.2::t]
+} -cleanup {
+	if {[info object isa object cfg]} {
+		cfg destroy
+	}
+	if {[namespace exists ::test_config-2.2]} {
+		namespace delete ::test_config-2.2
+	}
+} -result {foo bar orig.baz 1234}
+#>>>
+
+::tcltest::cleanupTests
+return

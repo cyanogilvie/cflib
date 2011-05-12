@@ -6,7 +6,7 @@ proc cflib::fullynormalize {fn} {
 	set patience	20
 	set seen		{}
 	while {[file type $fqfn] eq "link"} {
-		set fqfn	[file normalize [file readlink $fqfn]]
+		set fqfn	[file normalize [file join [file dirname $fqfn] [file readlink $fqfn]]]
 		if {[incr patience -1] <= 0} {
 			error "Too many symlinks: $fn"
 		}

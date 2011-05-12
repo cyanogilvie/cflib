@@ -7,15 +7,35 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: all.tcl,v 1.4 2004/07/04 22:04:20 patthoyts Exp $
+# RCS: @(#) $Id$
+
+if {[file system [info script]] eq "native"} {
+	package require platform
+
+	foreach platform [platform::patterns [platform::identify]] {
+		set tm_path		[file join $env(HOME) .tbuild repo tm $platform]
+		set pkg_path	[file join $env(HOME) .tbuild repo pkg $platform]
+		if {[file exists $tm_path]} {
+			tcl::tm::path add $tm_path
+		}
+		if {[file exists $pkg_path]} {
+			lappend auto_path $pkg_path
+		}
+	}
+}
+set parent	[file dirname [file dirname [file normalize [info script]]]]
+tcl::tm::path add [file join $parent tm tcl]
+
+package require cflib
+package require sop
+package require dsl
+
+proc ?? args {}
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     package require tcltest
     namespace import ::tcltest::*
 }
-
-set here	[file dirname [file normalize [info script]]]
-tcl::tm::path add [file join [file dirname $here] tm tcl]
 
 set ::tcltest::testSingleFile false
 set ::tcltest::testsDirectory [file dir [info script]]
@@ -32,15 +52,6 @@ if {[catch {::tcltest::normalizePath ::tcltest::testsDirectory}]} {
 }
 
 set chan $::tcltest::outputChannel
-
-#rename puts _puts
-#proc puts {args} {
-#	if {[string trim [lindex $args end]] eq ""} {
-#		error "Bang"
-#	} else {
-#		uplevel 1 [list _puts {*}$args]
-#	}
-#}
 
 puts $chan "Tests running in interp:       [info nameofexecutable]"
 puts $chan "Tests running with pwd:        [pwd]"
@@ -62,13 +73,14 @@ if {[llength $::tcltest::matchFiles] > 0} {
 set timeCmd {clock format [clock seconds]}
 puts $chan "Tests began at [eval $timeCmd]"
 
+
 # source each of the specified tests
 foreach file [lsort [::tcltest::getMatchingFiles]] {
-    set tail [file tail $file]
-    puts $chan $tail
-    if {[catch {source $file} msg]} {
-	puts $chan $msg
-    }
+	set tail [file tail $file]
+	puts $chan $tail
+	if {[catch {source $file} msg]} {
+		puts $chan $msg
+	}
 }
 
 # cleanup

@@ -8,10 +8,13 @@ oo::class create cflib::config {
 	}
 
 	constructor {argv config {configfile ""}} { #<<<
-		package require dsl
+		if {[self next] ne ""} next
+
+		package require dsl 0.4
 		set cfg	[dict create]
 
-		set slave	[interp create -safe]
+		#set slave	[interp create -safe]
+		set slave	[my Interp]
 		try {
 			dsl::dsl_eval $slave {
 				variable {definitionsvar varname default} { #<<<
@@ -42,7 +45,7 @@ oo::class create cflib::config {
 				#>>>
 			} $config [namespace which -variable definitions]
 		} finally {
-			if {[interp exists $slave]} {
+			if {$slave ne {} && [interp exists $slave]} {
 				interp delete $slave
 			}
 		}
@@ -51,9 +54,16 @@ oo::class create cflib::config {
 			set cfg	[dict merge $cfg [dsl::decomment [cflib::readfile $configfile]]]
 		}
 
+		set rest	[my configure {*}$argv]
+	}
+
+	#>>>
+	method Interp {} {interp create -safe}
+	method configure {args} { #<<<
+		set thisrest	{}
+
 		set mode	"key"
-		set rest	{}
-		foreach arg $argv {
+		foreach arg $args {
 			if {$arg eq "--"} {
 				set mode	"forced_rest"
 				continue
@@ -68,7 +78,7 @@ oo::class create cflib::config {
 						}
 						set mode	"val"
 					} else {
-						lappend rest	$arg
+						lappend thisrest	$arg
 					}
 				}
 
@@ -78,7 +88,7 @@ oo::class create cflib::config {
 				}
 
 				forced_rest {
-					lappend rest	$arg
+					lappend thisrest	$arg
 				}
 			}
 		}
@@ -88,6 +98,14 @@ oo::class create cflib::config {
 				dict set cfg $k [dict get $definitions $k default]
 			}
 		}
+
+		set thisrest
+	}
+
+	#>>>
+	method cget {param} { #<<<
+		if {[string index $param 0] ne "-"} {error "Syntax error"}
+		my get [string range $param 1 end]
 	}
 
 	#>>>

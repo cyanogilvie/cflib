@@ -1,0 +1,163 @@
+# vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
+
+if {"::tcltest" ni [namespace children]} {
+	package require tcltest 2.3.3
+	namespace import ::tcltest::*
+}
+
+package require cflib
+
+set thurs		"2011-05-12 13:14"
+set thurs_late	"2011-05-12 18:14"
+set setup	{cflib::businesstime create btime -office_hours {Mon-Fri {8am 5pm}}}
+set cleanup	{if {[info object isa object btime]} {btime destroy}}
+
+test businesstime-1.1 {Simple 1 hour offset, assumes it's still within the current business day} -body { #<<<
+	cflib::businesstime create btime -office_hours {Mon-Fri {8am 5pm}}
+
+	set a	[clock seconds]
+	set b	[btime offset "1 hour"]
+	expr {
+		abs($a + 3600 - $b) < 1
+	}
+} -cleanup {
+	if {[info object isa object btime]} {btime destroy}
+} -result 1
+#>>>
+
+# Hours offset <<<
+test businesstime-2.1 {Compute times from a specified from} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "1 hour" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-12 14:14:00"
+
+test businesstime-2.2 {Hours offset that wraps to the next day} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "4 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-13 08:14:00"
+
+test businesstime-2.3 {Hours offset that wraps over the weekend} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "13 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-16 08:14:00"
+
+test businesstime-2.4 {Hours offset from after hours that wraps over the weekend} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "10 hours" $thurs_late] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-16 09:00:00"
+# Hours offset >>>
+
+# Days offset <<<
+test businesstime-3.1 {Next business day} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "1 day" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-13 13:14:00"
+
+test businesstime-3.2 {Business day skipping weekend} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "2 days" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-16 08:00:00"
+
+test businesstime-3.3 {Business day same day} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "0 days" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-12 13:14:00"
+
+test businesstime-3.4 {Business 0 days after hours} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "0 days" $thurs_late] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-13 08:00:00"
+
+test businesstime-3.5 {Business 1 day after hours} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "1 day" $thurs_late] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-16 08:00:00"
+# Days offset >>>
+
+# Weeks offset <<<
+test businesstime-4.1 {Next business day in 1 week's time} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "1 week" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-19 13:14:00"
+
+test businesstime-4.2 {Next business day in 1 week's time} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "1 week" $thurs_late] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-20 08:00:00"
+# Weeks offset >>>
+
+# Months offset <<<
+test businesstime-5.1 {Next business day in 2 months' time} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "2 months" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-07-12 13:14:00"
+
+test businesstime-5.2 {Next business day in 2 months' time} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "2 months" $thurs_late] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-07-13 08:00:00"
+
+test businesstime-5.3 {Next business day in 1 month's time} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "1 month" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-06-13 08:00:00"
+# Months offset >>>
+
+# Years offset <<<
+test businesstime-6.1 {Next business day in 1 year's time} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "1 year" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2012-05-14 08:00:00"
+
+test businesstime-6.2 {Next business day in 3 years' time} -setup $setup -cleanup $cleanup -body {
+	clock format [btime offset "3 years" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2014-05-12 13:14:00"
+# Years offset >>>
+
+# Special days <<<
+test businesstime-10.1 {Hours offset with a holiday, special hours on Saturday, and a half day on Monday} -setup $setup -cleanup $cleanup -body {
+	btime configure -special_days [list apply {
+		daystart {
+			switch -exact -- [clock format $daystart -format %Y-%m-%d] {
+				2011-05-13 {return holiday}
+				2011-05-14 {return {9am 10:30}}
+				2011-05-16 {return {8am 9:00 10:00 12:00}}
+				default    {return normal}
+			}
+		}
+	}]
+	clock format [btime offset "9.5 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-17 09:14:00"
+# Special days >>>
+
+# Changing office_hours <<<
+test businesstime-11.1 {Testing cache invalidation} -setup $setup -cleanup $cleanup -body {
+	list \
+			[clock format [btime offset "3 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"] \
+			[clock format [btime configure -office_hours "Mon-Fri {8am 14:00 15:00 5pm}"; btime offset "3 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"]
+} -result [list "2011-05-12 16:14:00" "2011-05-13 08:14:00"]
+
+test businesstime-11.2 {Testing single day exceptions in office hours range, Sunday} -setup $setup -cleanup $cleanup -body {
+	btime configure -office_hours "Monday-Fri {8am 5pm} Sun {9am 10am}"
+	clock format [btime offset "13 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-15 09:14:00"
+
+test businesstime-11.3 {Testing single day exceptions in office hours range, Sunday} -setup $setup -cleanup $cleanup -body {
+	btime configure -office_hours "Monday-Fri {8am 5pm} Sun {9am 10am}"
+	clock format [btime offset "14 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-16 08:14:00"
+
+test businesstime-11.4 {Testing single day exceptions in office hours range, not Sunday} -setup $setup -cleanup $cleanup -body {
+	btime configure -office_hours "Monday-Fri {8am 5pm} Sat {9am 10am}"
+	clock format [btime offset "13 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-14 09:14:00"
+
+test businesstime-11.5 {Testing single day exceptions in office hours range, not Sunday} -setup $setup -cleanup $cleanup -body {
+	btime configure -office_hours "Monday-Fri {8am 5pm} Sat {9am 10am}"
+	clock format [btime offset "14 hours" $thurs] -format "%Y-%m-%d %H:%M:%S"
+} -result "2011-05-16 08:14:00"
+# Changing office_hours >>>
+
+# in_office_hours <<<
+test businesstime-12.1 {In office hours, true} -setup $setup -cleanup $cleanup -body {
+	btime in_office_hours $thurs
+} -result 1
+
+test businesstime-12.2 {In office hours, false} -setup $setup -cleanup $cleanup -body {
+	btime in_office_hours $thurs_late
+} -result 0
+# in_office_hours >>>
+
+# cget <<<
+test businesstime-13.1 {Testing cget forward} -setup $setup -cleanup $cleanup -body {
+	list [btime cget -office_hours] [btime configure -office_hours "Wed {9am 5pm} Mon-Fri {8am 5pm} Sat {9:30am 11:30}"; btime cget -office_hours]
+} -result [list "Mon-Fri {8am 5pm}" "Wed {9am 5pm} Mon-Fri {8am 5pm} Sat {9:30am 11:30}"]
+# cget >>>
+
+::tcltest::cleanupTests
+return
