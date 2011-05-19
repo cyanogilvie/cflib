@@ -144,4 +144,17 @@ oo::class create cflib::config {
 	}
 
 	#>>>
+	method unknown {cmd args} { #<<<
+		if {[string index $cmd 0] eq "@"} {
+			switch -exact -- [llength $args] {
+				0 {dict get $cfg [string range $cmd 1 end]}
+				1 {dict set $cfg [string range $cmd 1 end] [lindex $args 0]}
+				default {return -code error -level 2 "Wrong number of args, should be [self] $cmd ?newvalue?"}
+			}
+		} else {
+			next $cmd {*}$args
+		}
+	}
+
+	#>>>
 }

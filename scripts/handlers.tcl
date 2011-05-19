@@ -9,17 +9,14 @@ oo::class create cflib::handlers {
 		processing_stack
 	}
 
-	constructor {args} { #<<<
+	constructor {} { #<<<
 		set allow_unregistered	1
 		set handlers			[dict create]
 		set afterids			[dict create]
 		set processing_handlers	0
 		set processing_stack	{}
 
-		if {[self next] ne ""} {
-			puts "cflib::handlers for [self], next is: ([self next])"
-			next {*}$args
-		}
+		if {[self next] ne ""} next
 	}
 
 	#>>>
@@ -30,7 +27,7 @@ oo::class create cflib::handlers {
 				dict unset afterids $key
 			}
 		}
-		if {[self next] ne {}} {next}
+		if {[self next] ne ""} next
 	}
 
 	#>>>
@@ -134,7 +131,7 @@ oo::class create cflib::handlers {
 		switch -- $lvl {
 			warning -
 			error {
-				puts stderr "cflib::handlers::handlers_debug([self]): $lvl $msg"
+				log error "cflib::handlers::handlers_debug([self]): $lvl $msg"
 			}
 		}
 	}
@@ -142,7 +139,7 @@ oo::class create cflib::handlers {
 	#>>>
 
 	method _throw_hissy_handler {handler arglist} { #<<<
-		puts stderr "\n\nHandlers::throw_hissy: obj: ([self]) taking way too long to complete invoke_handlers for handler: ($handler)\n\targs: ($arglist)\n\n"
+		log debug "\n\nHandlers::throw_hissy: obj: ([self]) taking way too long to complete invoke_handlers for handler: ($handler)\n\targs: ($arglist)\n\n"
 	}
 
 	#>>>
