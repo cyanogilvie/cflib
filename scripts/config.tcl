@@ -1,6 +1,8 @@
 # vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
 
 oo::class create cflib::config {
+	superclass cflib::handlers
+
 	variable {*}{
 		definitions
 		cfg
@@ -59,7 +61,7 @@ oo::class create cflib::config {
 
 	#>>>
 	method Interp {} {interp create -safe}
-	method configure {args} { #<<<
+	method configure args { #<<<
 		set thisrest	{}
 
 		set mode	"key"
@@ -83,7 +85,7 @@ oo::class create cflib::config {
 				}
 
 				val {
-					dict set cfg $key $arg
+					my set $key $arg
 					set mode	"key"
 				}
 
@@ -103,7 +105,7 @@ oo::class create cflib::config {
 	}
 
 	#>>>
-	method cget {param} { #<<<
+	method cget param { #<<<
 		if {[string index $param 0] ne "-"} {error "Syntax error"}
 		my get [string range $param 1 end]
 	}
@@ -136,6 +138,8 @@ oo::class create cflib::config {
 	#>>>
 	method set {key newval} { #<<<
 		dict set cfg $key $newval
+		my invoke_handlers onchange,$key
+		set newval
 	}
 
 	#>>>
@@ -148,7 +152,7 @@ oo::class create cflib::config {
 		if {[string index $cmd 0] eq "@"} {
 			switch -exact -- [llength $args] {
 				0 {dict get $cfg [string range $cmd 1 end]}
-				1 {dict set $cfg [string range $cmd 1 end] [lindex $args 0]}
+				1 {my set [string range $cmd 1 end] [lindex $args 0]}
 				default {return -code error -level 2 "Wrong number of args, should be [self] $cmd ?newvalue?"}
 			}
 		} else {
