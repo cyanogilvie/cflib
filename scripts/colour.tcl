@@ -22,9 +22,9 @@ proc cflib::c {args} {
 		bright		1
 		norm		0
 	}
-	lmap t $args {
+	join [lmap t $args {
 		if {![dict exists $map $t]} continue
-		set _ "\\\[[dict get $map $t]m"
-	}
+		set _ "\[[dict get $map $t]m"
+	}] {}
 }
 
