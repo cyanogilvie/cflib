@@ -158,7 +158,7 @@ oo::class create cflib::process {
 		dict set output_matches $waitid match $match
 		if {$timeout_ms ne ""} {
 			dict set output_matches $waitid afterid [after $timeout_ms \
-					[code _wait_timeout $waitid]
+					[code _wait_timeout $waitid]]
 		} else {
 			dict set output_matches $waitid afterid ""
 		}
