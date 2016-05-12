@@ -8,7 +8,7 @@ namespace eval ::oo::define::cflib {
 			tailcall method $name $arglist $bodyscript
 		}
 		set class	[info object namespace [lindex [info level -1] 1]]
-		set cmd		[lidnex $name end]
+		set cmd		[lindex $name end]
 		set ns		${class}::[join [lrange $name 0 end-1] ::]
 		if {$arglist ne {}} {
 			foreach a $arglist {
@@ -27,7 +27,7 @@ namespace eval ::oo::define::cflib {
 		} else {
 			set body	"uplevel 2 [list $bodyscript]"
 		}
-		namespace eval $ns[list proc $cmd $arglist $body
+		namespace eval $ns[list proc $cmd $arglist $body]
 		for {set i 1} {$i < [llength $name]} {incr i} {
 			namespace eval $ns [list namespace export $cmd]
 			namespace eval $ns {namespace ensemble create}
