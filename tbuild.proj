@@ -1,5 +1,5 @@
 tm "cflib" {
-	version 1.14.1
+	version 1.14.2
 
 	summary "Miscellaneous collection of commonly used base classes and procs"
 
@@ -17,6 +17,7 @@ tm "cflib" {
 		scripts/handlers.tcl
 		scripts/baselog.tcl
 		scripts/config.tcl
+		scripts/pclass.tcl
 		scripts/*.tcl
 	}
 
