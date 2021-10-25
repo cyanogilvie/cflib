@@ -16,6 +16,10 @@ oo::class create cflib::handlers {
 		set processing_handlers	0
 		set processing_stack	{}
 
+		if {[llength [info commands log]] == 0} {
+			proc log {lvl msg} {puts stderr $msg}
+		}
+
 		if {[self next] ne ""} next
 	}
 

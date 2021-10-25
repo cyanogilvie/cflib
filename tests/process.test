@@ -7,8 +7,8 @@ if {"::tcltest" ni [namespace children]} {
 
 package require cflib 1.8.0
 
-coroutine coro_[incr ::coro_seq] apply {
-	{} {
+coroutine coro_[incr ::coro_seq] namespace eval :: {
+	try {
 		test process-1.1 {Simple echo test} -constraints {unix} -body { #<<<
 			cflib::process create p echo "hello, world"
 			p waitfor finished
@@ -150,11 +150,13 @@ coroutine coro_[incr ::coro_seq] apply {
 			}
 		} -result {1}
 		#>>>
-
-		set ::done 1
+	} finally {
+		set ::process_done 1
 	}
 }
 
-vwait ::done
+if {![info exists ::process_done]} {
+	vwait ::process_done
+}
 ::tcltest::cleanupTests
 return

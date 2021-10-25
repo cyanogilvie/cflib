@@ -1,4 +1,5 @@
-TBUILD=`which tbuild`
+TBUILD="cftcl.tbuild-lite"
+TCLSH="cftcl"
 
 all:
 	$(TBUILD) build all
@@ -11,7 +12,7 @@ install:
 
 test: all
 	#$(TBUILD) run -- tests/all.tcl $(TESTFLAGS)
-	`which cfkit8.6` tests/all.tcl $(TESTFLAGS)
+	$(TCLSH) tests/all.tcl $(TESTFLAGS)
 
 remove:
 	$(TBUILD) remove

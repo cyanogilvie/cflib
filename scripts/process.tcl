@@ -12,7 +12,7 @@
 
 oo::class create cflib::process {
 	uplevel #0 {package require sop}
-	superclass sop::signalsource cflib::handlers
+	superclass cflib::handlers sop::signalsource
 
 	variable {*}{
 		cmd

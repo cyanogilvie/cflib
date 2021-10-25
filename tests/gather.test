@@ -1,0 +1,50 @@
+# vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
+
+if {"::tcltest" ni [namespace children]} {
+	package require tcltest 2.3.3
+	namespace import ::tcltest::*
+}
+
+set tests {
+	test gather_$mode-1.1 {Wait for two async results} -body { #<<<
+		cflib::gather instvar gather
+
+		after 100 [list {*}[$gather slot foo] "foo result"]
+		after  50 [list {*}[$gather slot bar] "bar result"]
+
+		set res	[$gather results -timeout 2.0]
+		list [dict get $res foo] [dict get $res bar]
+	} -cleanup {
+		unset -nocomplain gather res
+	} -result {{foo result} {bar result}}
+	#>>>
+	test gather_$mode-2.1 {Wait for two async results, timeout after one} -body { #<<<
+		cflib::gather instvar gather
+
+		after 100 [list {*}[$gather slot foo] "foo result"]
+		after  50 [list {*}[$gather slot bar] "bar result"]
+
+		catch {$gather results -timeout 0.075} r o
+		list $r [dict get $o -errorcode] [$gather slots] [$gather slots ready] [$gather slots waiting]
+	} -cleanup {
+		unset -nocomplain gather res r o
+	} -result [list {Timeout waiting for signal "ready"} {SOP TIMEOUT ready} {ready bar waiting foo} bar foo]
+	#>>>
+}
+
+set mode	coro
+coroutine test_gather_coro namespace eval :: {
+	try $tests finally {
+		set test_gather_coro_done	1
+	}
+}
+
+if {![info exists test_gather_coro_done]} {
+	vwait ::test_gather_coro_done
+}
+
+set mode	vwait
+eval $tests
+
+::tcltest::cleanupTests
+return

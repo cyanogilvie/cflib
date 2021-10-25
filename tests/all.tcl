@@ -26,7 +26,7 @@ if {[file system [info script]] eq "native"} {
 set parent	[file dirname [file dirname [file normalize [info script]]]]
 tcl::tm::path add [file join $parent tm tcl]
 
-package require cflib
+package require cflib [lindex [exec grep version [file join $parent tbuild.proj]] 1]
 package require sop
 package require dsl
 
