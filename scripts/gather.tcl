@@ -20,6 +20,7 @@ gc_class create cflib::gather {
 		timeout_afterid
 		signals
 		results
+		processors
 	}
 
 	constructor args { #<<<
@@ -32,6 +33,7 @@ gc_class create cflib::gather {
 
 		set timeout_afterid	""
 		set results			{}
+		set processors		{}
 		array set signals	{}
 		sop::gate new signals(ready) -mode and -name "ready" -default true
 
@@ -47,6 +49,7 @@ gc_class create cflib::gather {
 	#>>>
 	method slot {name args} { #<<<
 		parse_args $args {
+			-process	{-default {}}
 		}
 
 		if {[info exists signals(slot_$name)]} {
@@ -55,6 +58,7 @@ gc_class create cflib::gather {
 
 		sop::signal new signals(slot_$name) -name "slot $name ready"
 		$signals(ready) attach_input $signals(slot_$name)
+		dict set processors $name $process
 
 		list ::cflib::gather_results_cb [self] $name
 	}
@@ -63,6 +67,10 @@ gc_class create cflib::gather {
 	method slot_ready {name result} { #<<<
 		if {![info exists signals(slot_$name)]} {
 			error "Recieved result for non-existant slot \"$name\""
+		}
+
+		if {[dict get $processors $name] ne {}} {
+			set result	[{*}[dict get $processors $name] $result]
 		}
 		dict set results $name $result
 		$signals(slot_$name) set_state 1

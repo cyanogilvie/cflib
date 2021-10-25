@@ -30,6 +30,21 @@ set tests {
 		unset -nocomplain gather res r o
 	} -result [list {Timeout waiting for signal "ready"} {SOP TIMEOUT ready} {ready bar waiting foo} bar foo]
 	#>>>
+	test gather_$mode-3.1 {Intermediate processing and chaining} -body { #<<<
+		cflib::gather instvar gather
+
+		after 100 [list {*}[$gather slot foo -process [list apply {{gather res} {
+			after 10 [list {*}[$gather slot baz] "baz ($res)"]
+			return "processed: ($res)"
+		}} $gather]] "foo result"]
+		after  50 [list {*}[$gather slot bar] "bar result"]
+
+		set res	[$gather results]
+		list [$gather slots] [dict get $res foo] [dict get $res bar] [dict get $res baz]
+	} -cleanup {
+		unset -nocomplain gather res
+	} -result {{ready {bar baz foo} waiting {}} {processed: (foo result)} {bar result} {baz (foo result)}}
+	#>>>
 }
 
 set mode	coro
