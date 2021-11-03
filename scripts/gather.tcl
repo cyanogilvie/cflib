@@ -80,12 +80,15 @@ gc_class create cflib::gather {
 	method results args { #<<<
 		parse_args $args {
 			-timeout	{-# {If set, wait up to this many seconds for all results to be ready}}
+			-partial	{-boolean -# {If set, return whatever results are ready without waiting}}
 		}
 
-		if {[info exists timeout]} {
-			$signals(ready) waitfor true [expr {int($timeout * 1000)}]
-		} else {
-			$signals(ready) waitfor true
+		if {!$partial} {
+			if {[info exists timeout]} {
+				$signals(ready) waitfor true [expr {int($timeout * 1000)}]
+			} else {
+				$signals(ready) waitfor true
+			}
 		}
 
 		set results
