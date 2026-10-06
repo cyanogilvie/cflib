@@ -1,35 +1,164 @@
-# vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
+# vim: ft=tcl foldmethod=marker foldmarker=<<< >>> ts=4 shiftwidth=4
 
 if {"::tcltest" ni [namespace children]} {
 	package require tcltest 2.3.3
 	namespace import ::tcltest::*
 }
 
-test format_number-1.0 {Empty}		{cflib::format_number {}} {}
+set ts	\u2009	;# thin space
+
+# cflib::format_number is only defined when jitc 0.8+ is available
+if {![llength [info commands ::cflib::format_number]]} {
+	puts stderr "format_number.test: skipped, cflib::format_number needs jitc 0.8+"
+	::tcltest::cleanupTests
+	return
+}
+
+test format_number-1.0 {Empty} -body {
+	cflib::format_number {}
+} -returnCodes error -result {Not a number ""}
+
 test format_number-1.1 {len: 1}		{cflib::format_number 1} 1
 test format_number-1.2 {len: 2}		{cflib::format_number 12} 12
 test format_number-1.3 {len: 3}		{cflib::format_number 123} 123
-test format_number-1.4 {len: 4}		{cflib::format_number 1234} 1,234
-test format_number-1.5 {len: 5}		{cflib::format_number 12345} 12,345
-test format_number-1.6 {len: 6}		{cflib::format_number 123456} 123,456
-test format_number-1.7 {len: 7}		{cflib::format_number 1234567} 1,234,567
-test format_number-1.8 {len: 8}		{cflib::format_number 12345678} 12,345,678
-test format_number-1.9 {len: 9}		{cflib::format_number 123456789} 123,456,789
-test format_number-1.10 {len: 10}	{cflib::format_number 1234567890} 1,234,567,890
+test format_number-1.4 {len: 4}		{cflib::format_number 1234} 1${ts}234
+test format_number-1.5 {len: 5}		{cflib::format_number 12345} 12${ts}345
+test format_number-1.6 {len: 6}		{cflib::format_number 123456} 123${ts}456
+test format_number-1.7 {len: 7}		{cflib::format_number 1234567} 1${ts}234${ts}567
+test format_number-1.8 {len: 8}		{cflib::format_number 12345678} 12${ts}345${ts}678
+test format_number-1.9 {len: 9}		{cflib::format_number 123456789} 123${ts}456${ts}789
+test format_number-1.10 {len: 10}	{cflib::format_number 1234567890} 1${ts}234${ts}567${ts}890
 
-test format_number-2.0 {Empty}		{cflib::format_number {.01}} .01
+test format_number-2.0 {Empty}		{cflib::format_number .01} .01
 test format_number-2.1 {len: 1}		{cflib::format_number 1.01} 1.01
 test format_number-2.2 {len: 2}		{cflib::format_number 12.01} 12.01
 test format_number-2.3 {len: 3}		{cflib::format_number 123.01} 123.01
-test format_number-2.4 {len: 4}		{cflib::format_number 1234.01} 1,234.01
-test format_number-2.5 {len: 5}		{cflib::format_number 12345.01} 12,345.01
-test format_number-2.6 {len: 6}		{cflib::format_number 123456.01} 123,456.01
-test format_number-2.7 {len: 7}		{cflib::format_number 1234567.01} 1,234,567.01
-test format_number-2.8 {len: 8}		{cflib::format_number 12345678.01} 12,345,678.01
-test format_number-2.9 {len: 9}		{cflib::format_number 123456789.01} 123,456,789.01
-test format_number-2.10 {len: 10}	{cflib::format_number 1234567890.01} 1,234,567,890.01
+test format_number-2.4 {len: 4}		{cflib::format_number 1234.01} 1${ts}234.01
+test format_number-2.5 {len: 5}		{cflib::format_number 12345.01} 12${ts}345.01
+test format_number-2.6 {len: 6}		{cflib::format_number 123456.01} 123${ts}456.01
+test format_number-2.7 {len: 7}		{cflib::format_number 1234567.01} 1${ts}234${ts}567.01
+test format_number-2.8 {len: 8}		{cflib::format_number 12345678.01} 12${ts}345${ts}678.01
+test format_number-2.9 {len: 9}		{cflib::format_number 123456789.01} 123${ts}456${ts}789.01
+test format_number-2.10 {len: 10}	{cflib::format_number 1234567890.01} 1${ts}234${ts}567${ts}890.01
 
 test format_number-3.1 {sep '}	{cflib::format_number 1234567890.01 '} 1'234'567'890.01
+test format_number-3.2 {sep はは}	{cflib::format_number 1234567890.01 はは} 1はは234はは567はは890.01
+
+test format_number-4.0 {Empty} -body {
+	cflib::format_number -
+} -returnCodes error -result {Not a number "-"}
+
+test format_number-4.1 {len: 1}		{cflib::format_number -1} -1
+test format_number-4.2 {len: 2}		{cflib::format_number -12} -12
+test format_number-4.3 {len: 3}		{cflib::format_number -123} -123
+test format_number-4.4 {len: 4}		{cflib::format_number -1234} -1${ts}234
+test format_number-4.5 {len: 5}		{cflib::format_number -12345} -12${ts}345
+test format_number-4.6 {len: 6}		{cflib::format_number -123456} -123${ts}456
+test format_number-4.7 {len: 7}		{cflib::format_number -1234567} -1${ts}234${ts}567
+test format_number-4.8 {len: 8}		{cflib::format_number -12345678} -12${ts}345${ts}678
+test format_number-4.9 {len: 9}		{cflib::format_number -123456789} -123${ts}456${ts}789
+test format_number-4.10 {len: 10}	{cflib::format_number -1234567890} -1${ts}234${ts}567${ts}890
+
+test format_number-5.0 {Empty}		{cflib::format_number -.01} -.01
+test format_number-5.1 {len: 1}		{cflib::format_number -1.01} -1.01
+test format_number-5.2 {len: 2}		{cflib::format_number -12.01} -12.01
+test format_number-5.3 {len: 3}		{cflib::format_number -123.01} -123.01
+test format_number-5.4 {len: 4}		{cflib::format_number -1234.01} -1${ts}234.01
+test format_number-5.5 {len: 5}		{cflib::format_number -12345.01} -12${ts}345.01
+test format_number-5.6 {len: 6}		{cflib::format_number -123456.01} -123${ts}456.01
+test format_number-5.7 {len: 7}		{cflib::format_number -1234567.01} -1${ts}234${ts}567.01
+test format_number-5.8 {len: 8}		{cflib::format_number -12345678.01} -12${ts}345${ts}678.01
+test format_number-5.9 {len: 9}		{cflib::format_number -123456789.01} -123${ts}456${ts}789.01
+test format_number-5.10 {len: 10}	{cflib::format_number -1234567890.01} -1${ts}234${ts}567${ts}890.01
+
+test format_number-6.1 {sep '}	{cflib::format_number -1234567890.01 '} -1'234'567'890.01
+
+test format_number-7.1 {inf}	{cflib::format_number inf} Inf
+test format_number-7.2 {Inf}	{cflib::format_number Inf} Inf
+test format_number-7.3 {INF}	{cflib::format_number INF} Inf
+test format_number-8.1 {-inf}	{cflib::format_number -inf} -Inf
+test format_number-8.2 {-Inf}	{cflib::format_number -Inf} -Inf
+test format_number-8.3 {-INF}	{cflib::format_number -INF} -Inf
+test format_number-9.1 {+inf}	{cflib::format_number +inf} Inf
+test format_number-9.2 {+Inf}	{cflib::format_number +Inf} Inf
+test format_number-9.3 {+INF}	{cflib::format_number +INF} Inf
+test format_number-10.1 {nan}	{cflib::format_number nan} NaN
+test format_number-10.2 {Nan}	{cflib::format_number Nan} NaN
+test format_number-10.3 {NaN}	{cflib::format_number NaN} NaN
+
+test format_number-11.1.1.0	{1e0}				{cflib::format_number 1e0}				1.0
+test format_number-11.1.1.1	{1e1}				{cflib::format_number 1e1}				10.0
+test format_number-11.1.1.2	{1e2}				{cflib::format_number 1e2}				100.0
+test format_number-11.1.1.3	{1e3}				{cflib::format_number 1e3}				1${ts}000.0
+test format_number-11.1.1.4	{1e4}				{cflib::format_number 1e4}				10${ts}000.0
+test format_number-11.1.1.5	{1e5}				{cflib::format_number 1e5}				100${ts}000.0
+test format_number-11.1.1.6	{1e6}				{cflib::format_number 1e6}				1${ts}000${ts}000.0
+test format_number-11.2.1	{1.23e6}			{cflib::format_number 1.23e6}			1${ts}230${ts}000.0
+test format_number-11.3.1	{12.3e5}			{cflib::format_number 12.3e5}			1${ts}230${ts}000.0
+test format_number-11.4.1	{12.34567e5}		{cflib::format_number 12.34567e5}		1${ts}234${ts}567.0
+test format_number-11.5.1	{12.345678e5}		{cflib::format_number 12.345678e5}		1${ts}234${ts}567.8
+test format_number-11.6.1	{12.3456789e5}		{cflib::format_number 12.3456789e5}		1${ts}234${ts}567.89
+test format_number-11.1.2	{01e6}				{cflib::format_number 01e6}				1${ts}000${ts}000.0
+test format_number-11.1.2.2	{0001e6}			{cflib::format_number 0001e6}			1${ts}000${ts}000.0
+test format_number-11.2.2	{01.23e6}			{cflib::format_number 01.23e6}			1${ts}230${ts}000.0
+test format_number-11.3.2	{012.3e5}			{cflib::format_number 012.3e5}			1${ts}230${ts}000.0
+test format_number-11.4.2	{012.34567e5}		{cflib::format_number 012.34567e5}		1${ts}234${ts}567.0
+test format_number-11.5.2	{012.345678e5}		{cflib::format_number 012.345678e5}		1${ts}234${ts}567.8
+test format_number-11.6.2	{012.3456789e5}		{cflib::format_number 012.3456789e5}	1${ts}234${ts}567.89
+test format_number-12.1.1	{-1e6}				{cflib::format_number -1e6}				-1${ts}000${ts}000.0
+test format_number-12.2.1	{-1.23e6}			{cflib::format_number -1.23e6}			-1${ts}230${ts}000.0
+test format_number-12.3.1	{-12.3e5}			{cflib::format_number -12.3e5}			-1${ts}230${ts}000.0
+test format_number-12.4.1	{-12.34567e5}		{cflib::format_number -12.34567e5}		-1${ts}234${ts}567.0
+test format_number-12.5.1	{-12.345678e5}		{cflib::format_number -12.345678e5}		-1${ts}234${ts}567.8
+test format_number-12.6.1	{-12.3456789e5}		{cflib::format_number -12.3456789e5}	-1${ts}234${ts}567.89
+test format_number-12.1.2	{-01e6}				{cflib::format_number -01e6}			-1${ts}000${ts}000.0
+test format_number-12.1.2.2	{-0001e6}			{cflib::format_number -0001e6}			-1${ts}000${ts}000.0
+test format_number-12.2.2	{-01.23e6}			{cflib::format_number -01.23e6}			-1${ts}230${ts}000.0
+test format_number-12.3.2	{-012.3e5}			{cflib::format_number -012.3e5}			-1${ts}230${ts}000.0
+test format_number-12.4.2	{-012.34567e5}		{cflib::format_number -012.34567e5}		-1${ts}234${ts}567.0
+test format_number-12.5.2	{-012.345678e5}		{cflib::format_number -012.345678e5}	-1${ts}234${ts}567.8
+test format_number-12.6.2	{-012.3456789e5}	{cflib::format_number -012.3456789e5}	-1${ts}234${ts}567.89
+
+test format_number-12.1		{.1e7}				{cflib::format_number .1e7}				1${ts}000${ts}000.0
+test format_number-12.2		{0.1e7}				{cflib::format_number 0.1e7}			1${ts}000${ts}000.0
+test format_number-12.3		{0.001e9}			{cflib::format_number 0.001e9}			1${ts}000${ts}000.0
+test format_number-12.4		{.001e9}			{cflib::format_number .001e9}			1${ts}000${ts}000.0
+test format_number-12.5		{.1e0}				{cflib::format_number .1e0}				0.1
+test format_number-12.6		{.01e0}				{cflib::format_number .01e0}			0.01
+
+test format_number-13.1		{1e-1}				{cflib::format_number 1e-1}				0.1
+test format_number-13.2		{1E-1}				{cflib::format_number 1E-1}				0.1
+test format_number-13.3		{1000e-3}			{cflib::format_number 1000e-3}			1.000
+test format_number-13.4		{1e-6}				{cflib::format_number 1e-6}				0.000${ts}001
+
+test format_number-14.1		{0.1}				{cflib::format_number 0.1}				0.1
+test format_number-14.1.2	{0.100}				{cflib::format_number 0.100}			0.100
+test format_number-14.2		{0.12}				{cflib::format_number 0.12}				0.12
+test format_number-14.3		{0.123}				{cflib::format_number 0.123}			0.123
+test format_number-14.4		{0.1234}			{cflib::format_number 0.1234}			0.123${ts}4
+test format_number-14.5		{0.12345}			{cflib::format_number 0.12345}			0.123${ts}45
+test format_number-14.6		{0.123456}			{cflib::format_number 0.123456}			0.123${ts}456
+test format_number-14.7		{0.1234567}			{cflib::format_number 0.1234567}		0.123${ts}456${ts}7
+test format_number-14.8		{0.12345678901}		{cflib::format_number 0.12345678901}	0.123${ts}456${ts}789${ts}01
+test format_number-14.9		{0.12345678901 ,}	{cflib::format_number 0.12345678901 ,}	0.123,456,789,01
+
+test format_number-15.1		{1.0e-1}			{cflib::format_number 1.0e-1}				0.10
+test format_number-15.1.1	{1e-1}				{cflib::format_number 1e-1}					0.1
+test format_number-15.1.2	{1.00e-1}			{cflib::format_number 1.00e-1}				0.100
+test format_number-15.1.3	{1000e-4}			{cflib::format_number 1000e-4}				0.100${ts}0
+test format_number-15.2		{1.2e-1}			{cflib::format_number 1.2e-1}				0.12
+test format_number-15.3		{1.23e-1}			{cflib::format_number 1.23e-1}				0.123
+test format_number-15.4		{1.234e-1}			{cflib::format_number 1.234e-1}				0.123${ts}4
+test format_number-15.5		{1.2345e-1}			{cflib::format_number 1.2345e-1}			0.123${ts}45
+test format_number-15.6		{1.23456e-1}		{cflib::format_number 1.23456e-1}			0.123${ts}456
+test format_number-15.7		{1.234567e-1}		{cflib::format_number 1.234567e-1}			0.123${ts}456${ts}7
+test format_number-15.8		{1.2345678901e-1}	{cflib::format_number 1.2345678901e-1}		0.123${ts}456${ts}789${ts}01
+test format_number-15.9		{1.2345678901e-1 ,}	{cflib::format_number 1.2345678901e-1 ,}	0.123,456,789,01
+
+test format_number-20.1		{1e1000}			{cflib::format_number 1e1000}		10[string repeat ${ts}000 333].0
+test format_number-20.2 {1e1001: exponent too large} -body {
+	cflib::format_number 1e1001
+} -returnCodes error -result {Exponent too large}
 
 ::tcltest::cleanupTests
 return
