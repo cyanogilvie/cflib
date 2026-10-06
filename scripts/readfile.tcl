@@ -5,8 +5,7 @@ proc cflib::readfile {fn {mode text}} {
 	try {
 		if {$mode eq "binary"} {
 			chan configure $handle \
-					-translation binary \
-					-encoding binary
+					-translation binary
 		}
 		chan read $handle
 	} finally {

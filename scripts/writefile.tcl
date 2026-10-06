@@ -5,8 +5,7 @@ proc cflib::writefile {fn data {mode "text"}} {
 	try {
 		if {$mode eq "binary"} {
 			chan configure $handle \
-					-translation binary \
-					-encoding binary
+					-translation binary
 		}
 		chan puts -nonewline $handle $data
 	} finally {

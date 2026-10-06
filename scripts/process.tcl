@@ -58,8 +58,7 @@ oo::class create cflib::process {
 		chan configure $handle \
 				-buffering none \
 				-blocking 0 \
-				-translation binary \
-				-encoding binary
+				-translation binary
 		set pids		[pid $handle]
 		chan event $handle readable [code _readable]
 		$signals(running) set_state 1
